@@ -7,22 +7,25 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using MyFirstMvcApp.Data;
 using MyFirstMvcApp.Models;
+using MyFirstMvcApp.Services;
 
 namespace MyFirstMvcApp.Controllers
 {
     public class ContactListController : Controller
     {
-        private readonly MyFirstMvcAppDbContext _context;
+        private readonly IContactListService _service;
 
-        public ContactListController(MyFirstMvcAppDbContext context)
+        public ContactListController(IContactListService service)
         {
-            _context = context;
+            _service = service;
         }
 
         // GET: ContactList
         public async Task<IActionResult> Index()
         {
-            return View(await _context.ContactListEntry.ToListAsync());
+            var entries = await _service.GetEntriesAsync();
+
+            return View(entries);
         }
 
         // GET: ContactList/Details/5
@@ -33,8 +36,8 @@ namespace MyFirstMvcApp.Controllers
                 return NotFound();
             }
 
-            var contactListEntry = await _context.ContactListEntry
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var contactListEntry = await _service.GetByIdAsync(id.Value);
+            
             if (contactListEntry == null)
             {
                 return NotFound();
@@ -58,10 +61,18 @@ namespace MyFirstMvcApp.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(contactListEntry);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                var succes = await _service.CreateEntryAsync(contactListEntry);
+
+                if (succes == true)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+                else
+                {
+                    ViewBag.ErrorMessage = "Something went wrong while creating contact list entry, please try again...";
+                }
             }
+
             return View(contactListEntry);
         }
 
@@ -73,11 +84,13 @@ namespace MyFirstMvcApp.Controllers
                 return NotFound();
             }
 
-            var contactListEntry = await _context.ContactListEntry.FindAsync(id);
+            var contactListEntry = await _service.GetByIdAsync(id.Value);
+
             if (contactListEntry == null)
             {
                 return NotFound();
             }
+
             return View(contactListEntry);
         }
 
@@ -97,12 +110,22 @@ namespace MyFirstMvcApp.Controllers
             {
                 try
                 {
-                    _context.Update(contactListEntry);
-                    await _context.SaveChangesAsync();
+                    var succes = await _service.UpdateEntryAsync(contactListEntry);
+
+                    if (succes == true)
+                    {
+                        return RedirectToAction(nameof(Index));
+                    }
+                    else
+                    {
+                        ViewBag.ErrorMessage = "Something went wrong while updating contact list entry, please try again...";
+                    }
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!ContactListEntryExists(contactListEntry.Id))
+                    var entry = await _service.GetByIdAsync(contactListEntry.Id);
+
+                    if (entry is null)
                     {
                         return NotFound();
                     }
@@ -111,8 +134,8 @@ namespace MyFirstMvcApp.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
             }
+
             return View(contactListEntry);
         }
 
@@ -124,14 +147,14 @@ namespace MyFirstMvcApp.Controllers
                 return NotFound();
             }
 
-            var contactListEntry = await _context.ContactListEntry
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (contactListEntry == null)
+            var entry = await _service.GetByIdAsync(id.Value);
+
+            if (entry is null)
             {
                 return NotFound();
             }
 
-            return View(contactListEntry);
+            return View(entry);
         }
 
         // POST: ContactList/Delete/5
@@ -139,15 +162,14 @@ namespace MyFirstMvcApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var contactListEntry = await _context.ContactListEntry.FindAsync(id);
-            _context.ContactListEntry.Remove(contactListEntry);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
+            var succes = await _service.DeleteEntryAsync(id);
 
-        private bool ContactListEntryExists(int id)
-        {
-            return _context.ContactListEntry.Any(e => e.Id == id);
+            if (succes == false)
+            {
+                return RedirectToAction(nameof(Delete), new { id });
+            }
+
+            return RedirectToAction(nameof(Index));
         }
     }
 }

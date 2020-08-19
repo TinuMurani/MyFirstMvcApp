@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
 using MyFirstMvcApp.Data;
+using MyFirstMvcApp.Services;
 
 namespace MyFirstMvcApp
 {
@@ -29,12 +30,14 @@ namespace MyFirstMvcApp
 
             services.AddDbContext<MyFirstMvcAppDbContext>(options =>
                     options.UseSqlServer(Configuration.GetConnectionString("MyFirstMvcAppDbContext")));
+
+            services.AddTransient<IContactListService, ContactListService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (env.IsDevelopment())
+            if (!env.IsProduction())
             {
                 app.UseDeveloperExceptionPage();
             }
