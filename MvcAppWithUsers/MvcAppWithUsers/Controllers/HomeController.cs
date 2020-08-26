@@ -4,30 +4,22 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.CodeAnalysis.Options;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using MyFirstMvcApp.Configuration;
-using MyFirstMvcApp.Models;
+using MvcAppWithUsers.Models;
 
-namespace MyFirstMvcApp.Controllers
+namespace MvcAppWithUsers.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        private readonly HostingSettings _hostSettings;
 
-        public HomeController(ILogger<HomeController> logger, IOptions<HostingSettings> hostSettings)
+        public HomeController(ILogger<HomeController> logger)
         {
             _logger = logger;
-            _hostSettings = hostSettings.Value;
         }
 
         public IActionResult Index()
         {
-            _logger.LogInformation($"HostingProviderName: { _hostSettings.HostingProviderName }");
-            _logger.LogInformation($"SqlServerAddress: { _hostSettings.SqlServerAddress }");
-            _logger.LogInformation($"BaseUrl: { _hostSettings.BaseUrl }");
             return View();
         }
 
