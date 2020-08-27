@@ -1,7 +1,8 @@
-﻿@using Microsoft.Extensions.Options
-@using Microsoft.Extensions.Configuration
+﻿@using Microsoft.Extensions.Configuration
+@using Microsoft.Extensions.Options
 @using MyFirstMvcApp.Configuration
-@inject Microsoft.Extensions.Options.IOptions<MyFirstMvcApp.Configuration.HostingSettings>
+
+@inject IOptions<HostingSettings> Configuration
 
 <!DOCTYPE html>
 <html lang="en">
@@ -46,6 +47,7 @@
     <footer class="border-top footer text-muted">
         <div class="container">
             &copy; 2020 - MyFirstMvcApp - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            <span>@Configuration.Value.HostingProviderName</span>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
